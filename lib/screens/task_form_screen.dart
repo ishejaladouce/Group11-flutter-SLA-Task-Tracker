@@ -4,6 +4,7 @@ import '../models/team_member.dart';
 import '../task_management/task_presentation.dart';
 import '../theme/app_theme.dart';
 import '../utils/demo_members.dart';
+import '../utils/validators.dart';
 
 class TaskFormScreen extends StatefulWidget {
   final TaskPresentation? task;
@@ -98,6 +99,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                 labelText: 'Title',
                 border: OutlineInputBorder(),
               ),
+              validator: Validators.title,
             ),
             const SizedBox(height: AppSpacing.medium),
             TextFormField(
@@ -110,6 +112,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                 alignLabelWithHint: true,
                 border: OutlineInputBorder(),
               ),
+              validator: Validators.description,
             ),
             const SizedBox(height: AppSpacing.medium),
             DropdownButtonFormField<String>(
@@ -127,6 +130,10 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                   )
                   .toList(),
               onChanged: (value) => setState(() => _assignee = value),
+              validator: (value) => Validators.assignee(
+                value,
+                demoMembers.map((member) => member.name),
+              ),
             ),
             const SizedBox(height: AppSpacing.medium),
             DropdownButtonFormField<String>(
@@ -144,10 +151,12 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                   )
                   .toList(),
               onChanged: (value) => setState(() => _priority = value),
+              validator: (value) => Validators.priority(value, _priorities),
             ),
             const SizedBox(height: AppSpacing.medium),
             FormField<DateTime>(
               initialValue: _deadline,
+              validator: Validators.deadline,
               builder: (field) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -187,6 +196,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                 suffixText: '%',
                 border: OutlineInputBorder(),
               ),
+              validator: Validators.progress,
             ),
             const SizedBox(height: AppSpacing.large),
             SizedBox(
