@@ -2,6 +2,7 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../models/task.dart';
+import '../utils/demo_tasks.dart';
 
 class StorageException implements Exception {
   final String message;
@@ -39,6 +40,12 @@ class DatabaseService {
         progress INTEGER NOT NULL
       )
     ''');
+
+    final batch = db.batch();
+    for (final task in buildDemoTasks()) {
+      batch.insert(_tasksTable, task.toMap());
+    }
+    await batch.commit(noResult: true);
   }
 
   Future<T> _guard<T>(String action, Future<T> Function() run) async {
