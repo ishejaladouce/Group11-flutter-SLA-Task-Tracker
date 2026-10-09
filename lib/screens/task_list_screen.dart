@@ -67,7 +67,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 ),
                 const SizedBox(height: AppSpacing.small),
                 DropdownButtonFormField<String>(
-                  value: _statusFilter,
+                  initialValue: _statusFilter,
                   decoration: const InputDecoration(
                     labelText: 'SLA status',
                     border: OutlineInputBorder(),
