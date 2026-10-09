@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../models/team_member.dart';
-import '../task_management/task_presentation.dart';
+import '../models/task.dart';
+import '../services/database_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/demo_members.dart';
 import '../utils/validators.dart';
 
 class TaskFormScreen extends StatefulWidget {
-  final TaskPresentation? task;
-  final TaskStore store;
+  final Task? task;
 
-  const TaskFormScreen({super.key, required this.store, this.task});
+  const TaskFormScreen({super.key, this.task});
 
   @override
   State<TaskFormScreen> createState() => _TaskFormScreenState();
@@ -64,23 +64,22 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     if (picked != null) setState(() => _deadline = picked);
   }
 
-  void _save() {
+  Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
-    final oldTask = widget.task;
-    final draft = TaskPresentation(
-      id: oldTask?.id ?? '',
+    final draft = Task(
+      id: widget.task?.id,
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       assignee: _assignee!,
       priority: _priority!,
       deadline: _deadline!,
       progress: int.parse(_progressController.text.trim()),
-      // TODO(Manuelle): populate this from the shared SLA helper.
-      slaStatus: oldTask?.slaStatus ?? 'On Track',
     );
-    final saved = widget.store.save(draft);
-    Navigator.pop(context, saved);
+    final saved = await DatabaseService.instance.saveTask(draft);
+    if (mounted) {
+      Navigator.pop(context, saved);
+    }
   }
 
   @override

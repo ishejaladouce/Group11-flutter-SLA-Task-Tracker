@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-import '../task_management/task_presentation.dart';
+import '../models/task.dart';
+import '../services/database_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/task_card.dart';
 
 class TaskListScreen extends StatefulWidget {
-  final TaskStore store;
 
-  const TaskListScreen({super.key, required this.store});
+  const TaskListScreen({super.key});
 
   @override
   State<TaskListScreen> createState() => _TaskListScreenState();
@@ -17,26 +17,46 @@ class _TaskListScreenState extends State<TaskListScreen> {
   final _searchController = TextEditingController();
   String _statusFilter = 'All';
 
+  List<Task> _tasks = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTasks();
+  }
+
+  Future<void> _loadTasks() async {
+    try {
+      final tasks = await DatabaseService.instance.getTasks();
+      debugPrint('Loaded ${tasks.length} tasks');
+      if (mounted) {
+        setState(() => _tasks = tasks);
+      }
+    } catch (e) {
+      debugPrint('Load failed: $e');
+    }
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
-  Future<void> _openTask(TaskPresentation task) async {
+  Future<void> _openTask(Task task) async {
     await Navigator.pushNamed(context, '/task-details', arguments: task);
-    if (mounted) setState(() {});
+    _loadTasks();
   }
 
   Future<void> _createTask() async {
     await Navigator.pushNamed(context, '/task-form');
-    if (mounted) setState(() {});
+    _loadTasks();
   }
 
   @override
   Widget build(BuildContext context) {
     final query = _searchController.text.trim().toLowerCase();
-    final tasks = widget.store.tasks.where((task) {
+    final tasks = _tasks.where((task) {
       final matchesQuery = task.title.toLowerCase().contains(query) ||
           task.assignee.toLowerCase().contains(query);
       final matchesStatus = _statusFilter == 'All' || task.slaStatus == _statusFilter;

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -35,6 +36,7 @@ class DatabaseService {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
         description TEXT NOT NULL,
+        assignee TEXT NOT NULL,
         priority TEXT NOT NULL,
         deadline TEXT NOT NULL,
         progress INTEGER NOT NULL
@@ -51,7 +53,8 @@ class DatabaseService {
   Future<T> _guard<T>(String action, Future<T> Function() run) async {
     try {
       return await run();
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('DB error while trying to $action: $e\n$stack');
       throw StorageException('Could not $action. Please try again.');
     }
   }

@@ -48,7 +48,8 @@ class Task {
   Map<String, Object?> toMap() => {
     'id': id,
     'title': title,
-    'description': assignee,
+    'description': description,
+    'assignee': assignee,
     'priority': priority,
     'deadline': deadline.toIso8601String(),
     'progress': progress,
