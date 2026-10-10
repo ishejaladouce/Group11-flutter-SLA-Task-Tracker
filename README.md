@@ -63,4 +63,4 @@ tasks covering all four SLA states.
 | Manuelle | Data models, SQLite, SLA logic, statistics and integration |
 
 ## Screenshots
-Screenshots go here.
+Screenshots of the UI can be found here: `docs/screenshots/`
