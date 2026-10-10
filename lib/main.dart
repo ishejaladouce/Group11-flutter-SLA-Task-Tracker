@@ -6,6 +6,7 @@ import 'screens/task_list_screen.dart';
 import 'screens/team_members_screen.dart';
 import 'models/task.dart';
 import 'screens/user_selection_screen.dart';
+import 'screens/welcome_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() {
@@ -23,7 +24,8 @@ class TaskTrackerApp extends StatelessWidget {
       theme: AppTheme.light,
       initialRoute: '/',
       routes: {
-        '/': (context) => const UserSelectionScreen(),
+        '/': (context) => const WelcomeScreen(),
+        '/select': (context) => const UserSelectionScreen(),
         '/dashboard': (context) => const DashboardScreen(),
         '/team': (context) => const TeamMembersScreen(),
         '/tasks': (context) => TaskListScreen(),
