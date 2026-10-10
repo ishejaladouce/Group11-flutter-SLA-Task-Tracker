@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 
-import '../task_management/task_presentation.dart';
+import '../models/task.dart';
+import '../services/database_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_card.dart';
 import '../widgets/priority_badge.dart';
 import '../widgets/status_badge.dart';
 
 class TaskDetailsScreen extends StatefulWidget {
-  final TaskPresentation task;
-  final TaskStore store;
+  final Task task;
 
-  const TaskDetailsScreen({super.key, required this.task, required this.store});
+  const TaskDetailsScreen({super.key, required this.task});
 
   @override
   State<TaskDetailsScreen> createState() => _TaskDetailsScreenState();
 }
 
 class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
-  late TaskPresentation _task = widget.task;
+  late Task _task = widget.task;
 
   Future<void> _editTask() async {
     final result = await Navigator.pushNamed(
@@ -25,7 +25,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
       '/task-form',
       arguments: _task,
     );
-    if (result is TaskPresentation && mounted) {
+    if (result is Task && mounted) {
       setState(() => _task = result);
     }
   }
@@ -35,7 +35,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete task?'),
-        content: const Text('This task will be removed from the demo list.'),
+        content: const Text('This task will be permanently deleted.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -49,8 +49,17 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
       ),
     );
     if (shouldDelete == true && mounted) {
-      widget.store.delete(_task.id);
-      Navigator.pop(context);
+      try {
+        await DatabaseService.instance.deleteTask(_task.id!);
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      } on StorageException catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+        }
+      }
     }
   }
 

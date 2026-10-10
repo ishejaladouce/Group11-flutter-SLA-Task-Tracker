@@ -4,7 +4,7 @@ import 'screens/task_details_screen.dart';
 import 'screens/task_form_screen.dart';
 import 'screens/task_list_screen.dart';
 import 'screens/team_members_screen.dart';
-import 'task_management/task_presentation.dart';
+import 'models/task.dart';
 import 'screens/user_selection_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -26,14 +26,12 @@ class TaskTrackerApp extends StatelessWidget {
         '/': (context) => const UserSelectionScreen(),
         '/dashboard': (context) => const DashboardScreen(),
         '/team': (context) => const TeamMembersScreen(),
-        '/tasks': (context) => TaskListScreen(store: MockTaskStore.instance),
+        '/tasks': (context) => TaskListScreen(),
         '/task-details': (context) => TaskDetailsScreen(
-              task: ModalRoute.of(context)!.settings.arguments! as TaskPresentation,
-              store: MockTaskStore.instance,
+              task: ModalRoute.of(context)!.settings.arguments! as Task,
             ),
         '/task-form': (context) => TaskFormScreen(
-              task: ModalRoute.of(context)?.settings.arguments as TaskPresentation?,
-              store: MockTaskStore.instance,
+              task: ModalRoute.of(context)?.settings.arguments as Task?,
             ),
       },
     );
