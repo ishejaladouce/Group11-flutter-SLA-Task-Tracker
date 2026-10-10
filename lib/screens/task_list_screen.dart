@@ -18,6 +18,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
   String _statusFilter = 'All';
 
   List<Task> _tasks = [];
+  bool _loading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -28,12 +30,22 @@ class _TaskListScreenState extends State<TaskListScreen> {
   Future<void> _loadTasks() async {
     try {
       final tasks = await DatabaseService.instance.getTasks();
-      debugPrint('Loaded ${tasks.length} tasks');
-      if (mounted) {
-        setState(() => _tasks = tasks);
+      if (!mounted) {
+        return;
       }
-    } catch (e) {
-      debugPrint('Load failed: $e');
+      setState(() {
+        _tasks = tasks;
+        _error = null;
+        _loading = false;
+      });
+    } on StorageException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _error = e.message;
+        _loading = false;
+      });
     }
   }
 
@@ -101,24 +113,54 @@ class _TaskListScreenState extends State<TaskListScreen> {
               ],
             ),
           ),
-          Expanded(
-            child: tasks.isEmpty
-                ? const Center(child: Text('No tasks match your search.'))
-                : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.medium, 0, AppSpacing.medium, 96,
-                    ),
-                    itemCount: tasks.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: AppSpacing.medium),
-                    itemBuilder: (context, index) => TaskCard(
-                      task: tasks[index],
-                      onTap: () => _openTask(tasks[index]),
-                    ),
-                  ),
-          ),
+          Expanded(child: _buildBody(tasks)),
         ],
       ),
+    );
+  }
+
+  Widget _buildBody(List<Task> tasks) {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(_error!),
+            const SizedBox(height: AppSpacing.small),
+            OutlinedButton(
+              onPressed: () {
+                setState(() => _loading = true);
+              },
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (tasks.isEmpty) {
+      return Center(
+        child: Text(_tasks.isEmpty
+          ? 'No tasks yet. Tap "New task" to add one.'
+          : 'No tasks match your search.'),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.medium, 0, AppSpacing.medium, 96,
+      ),
+      itemCount: tasks.length,
+      separatorBuilder: (context, index) =>
+        const SizedBox(height: AppSpacing.medium),
+      itemBuilder: (context, index) => TaskCard(
+        task: tasks[index],
+        onTap: () => _openTask(tasks[index]),
+      )
     );
   }
 }

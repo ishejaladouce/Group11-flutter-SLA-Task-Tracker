@@ -49,9 +49,16 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
       ),
     );
     if (shouldDelete == true && mounted) {
-      await DatabaseService.instance.deleteTask(_task.id!);
-      if (mounted) {
-        Navigator.pop(context);
+      try {
+        await DatabaseService.instance.deleteTask(_task.id!);
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      } on StorageException catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+        }
       }
     }
   }

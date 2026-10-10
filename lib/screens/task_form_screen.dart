@@ -76,9 +76,18 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
       deadline: _deadline!,
       progress: int.parse(_progressController.text.trim()),
     );
-    final saved = await DatabaseService.instance.saveTask(draft);
-    if (mounted) {
-      Navigator.pop(context, saved);
+    try {
+      final saved = await DatabaseService.instance.saveTask(draft);
+      if (mounted) {
+        Navigator.pop(context, saved);
+      }
+    } on StorageException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(e.message)));
     }
   }
 
