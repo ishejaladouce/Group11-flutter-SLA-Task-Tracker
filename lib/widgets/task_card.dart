@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-import '../task_management/task_presentation.dart';
+import '../models/task.dart';
 import '../theme/app_theme.dart';
 import 'app_card.dart';
 import 'priority_badge.dart';
 import 'status_badge.dart';
 
 class TaskCard extends StatelessWidget {
-  final TaskPresentation task;
+  final Task task;
   final VoidCallback? onTap;
 
   const TaskCard({super.key, required this.task, this.onTap});

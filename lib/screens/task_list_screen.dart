@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-import '../task_management/task_presentation.dart';
+import '../models/task.dart';
+import '../services/database_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/task_card.dart';
 
 class TaskListScreen extends StatefulWidget {
-  final TaskStore store;
 
-  const TaskListScreen({super.key, required this.store});
+  const TaskListScreen({super.key});
 
   @override
   State<TaskListScreen> createState() => _TaskListScreenState();
@@ -17,26 +17,58 @@ class _TaskListScreenState extends State<TaskListScreen> {
   final _searchController = TextEditingController();
   String _statusFilter = 'All';
 
+  List<Task> _tasks = [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTasks();
+  }
+
+  Future<void> _loadTasks() async {
+    try {
+      final tasks = await DatabaseService.instance.getTasks();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _tasks = tasks;
+        _error = null;
+        _loading = false;
+      });
+    } on StorageException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _error = e.message;
+        _loading = false;
+      });
+    }
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
-  Future<void> _openTask(TaskPresentation task) async {
+  Future<void> _openTask(Task task) async {
     await Navigator.pushNamed(context, '/task-details', arguments: task);
-    if (mounted) setState(() {});
+    _loadTasks();
   }
 
   Future<void> _createTask() async {
     await Navigator.pushNamed(context, '/task-form');
-    if (mounted) setState(() {});
+    _loadTasks();
   }
 
   @override
   Widget build(BuildContext context) {
     final query = _searchController.text.trim().toLowerCase();
-    final tasks = widget.store.tasks.where((task) {
+    final tasks = _tasks.where((task) {
       final matchesQuery = task.title.toLowerCase().contains(query) ||
           task.assignee.toLowerCase().contains(query);
       final matchesStatus = _statusFilter == 'All' || task.slaStatus == _statusFilter;
@@ -81,24 +113,54 @@ class _TaskListScreenState extends State<TaskListScreen> {
               ],
             ),
           ),
-          Expanded(
-            child: tasks.isEmpty
-                ? const Center(child: Text('No tasks match your search.'))
-                : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.medium, 0, AppSpacing.medium, 96,
-                    ),
-                    itemCount: tasks.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: AppSpacing.medium),
-                    itemBuilder: (context, index) => TaskCard(
-                      task: tasks[index],
-                      onTap: () => _openTask(tasks[index]),
-                    ),
-                  ),
-          ),
+          Expanded(child: _buildBody(tasks)),
         ],
       ),
+    );
+  }
+
+  Widget _buildBody(List<Task> tasks) {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(_error!),
+            const SizedBox(height: AppSpacing.small),
+            OutlinedButton(
+              onPressed: () {
+                setState(() => _loading = true);
+              },
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (tasks.isEmpty) {
+      return Center(
+        child: Text(_tasks.isEmpty
+          ? 'No tasks yet. Tap "New task" to add one.'
+          : 'No tasks match your search.'),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.medium, 0, AppSpacing.medium, 96,
+      ),
+      itemCount: tasks.length,
+      separatorBuilder: (context, index) =>
+        const SizedBox(height: AppSpacing.medium),
+      itemBuilder: (context, index) => TaskCard(
+        task: tasks[index],
+        onTap: () => _openTask(tasks[index]),
+      )
     );
   }
 }
